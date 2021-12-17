@@ -1,9 +1,13 @@
 import time
 import pyzbar.pyzbar as pyzbar
 import cv2
+import asyncio
+import requests
+import json
 
 cap = cv2.VideoCapture(0)
 detector = cv2.QRCodeDetector()
+link = "http://52.76.27.252:3000/registrations/verify/"
 
 
 def startApp():
@@ -21,6 +25,24 @@ def decode(img):
     return numbers
 
 
+def fetch_and_check(data):
+    get_api = link + str(data)
+    response = requests.get(get_api)
+    # response.json()
+    parse_json = json.loads(response.text)
+    # print(response.text)
+    # print(parse_json)
+    # print(parse_json["valid"])
+    if parse_json['valid'].lower() == 'yes':
+        print("Access granted")
+    else:
+        if parse_json['valid'].lower() == 'no':
+            print("Access denied")
+        else:
+            print("Invalid response")
+    return response
+
+
 startApp()
 print("Start to read QR code")
 
@@ -32,6 +54,7 @@ while True:
         if data:
             turnOn = False
             print(data)
+            fetch_and_check(data)
             data = ""
 
         cv2.imshow("camera", img)
